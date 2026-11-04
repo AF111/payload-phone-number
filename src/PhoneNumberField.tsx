@@ -187,7 +187,12 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             placeholder="Country"
           />
         </div>
-        <div className="payload-phone-number__input">
+        <div
+          className="payload-phone-number__input"
+          onBlur={(event: React.FocusEvent<HTMLDivElement>) => {
+            if (event.target instanceof HTMLInputElement) onInputBlur()
+          }}
+        >
           <TextInput
             Label={<></>}
             Error={
@@ -210,7 +215,6 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             description={fieldDescription}
             htmlAttributes={{
               autoComplete: 'tel',
-              onBlur: onInputBlur,
             }}
           />
         </div>
