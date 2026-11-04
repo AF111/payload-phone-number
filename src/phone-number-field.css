@@ -3,6 +3,7 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  padding-bottom: 16px;
 }
 
 .payload-phone-number__controls {
@@ -20,9 +21,26 @@
   width: 100%;
 }
 
-.payload-phone-number__input {
-  flex: 1;
+.payload-phone-number__country-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
+}
+
+.payload-phone-number__country-option img {
+  display: block;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.payload-phone-number__country-option > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .payload-phone-number__previews {
