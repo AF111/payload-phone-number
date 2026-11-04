@@ -81,10 +81,11 @@ Formatting is for display only; it is not written to either stored value.
 ## Behavior and validation
 
 - Numbers beginning with `+` or the international access prefix `00` are detected as international numbers, regardless of the currently selected country.
-- Once a valid international number identifies a country, the country selector updates automatically and the dialing code is removed from the input, leaving the national-format number.
+- When the input loses focus, an international number that identifies a country updates the country selector and replaces the dialing-code-prefixed input with its national format.
+- Parsing and validation are deferred until the input loses focus, rather than running on every keystroke.
 - Country flags are loaded from FlagCDN.
 - National-format input is interpreted using the selected country.
-- Invalid or incomplete input is not stored as a normalized number.
+- Invalid or incomplete input is not stored as a normalized number. Empty optional groups are accepted; partially populated groups are rejected.
 - Server-side field validation checks that the E.164 and national values are valid and consistent.
 - Extensions are currently not supported; enter the main phone number without an extension.
 
