@@ -2,8 +2,8 @@
 
 import React, { useMemo, useState } from 'react'
 import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, type CountryCode } from 'libphonenumber-js'
-import { FieldDescription, FieldLabel, TextInput, useField } from '@payloadcms/ui'
-import type { GroupFieldClientComponent, GroupFieldClientProps } from 'payload'
+import { FieldLabel, TextInput, useField } from '@payloadcms/ui'
+import type { GroupFieldClientProps } from 'payload'
 import './phone-number-field.css'
 
 export type PhoneNumberFieldProps = {
@@ -26,7 +26,7 @@ function digits(value: string): string {
   return value.replace(/\D/g, '')
 }
 
-export const PhoneNumberField: GroupFieldClientComponent = (rawProps) => {
+export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberFieldProps> = (rawProps) => {
   const {
     path,
     defaultCountry = 'US',
@@ -39,9 +39,11 @@ export const PhoneNumberField: GroupFieldClientComponent = (rawProps) => {
 
   const { value: storedValue, setValue } = useField<PhoneNumberValue>({ path })
   const e164Value = storedValue?.e164
+  const storedCountry = e164Value ? parsePhoneNumberFromString(e164Value)?.country : undefined
+  const preferredCountry = storedCountry ?? defaultCountry.toUpperCase()
   const initialCountry = (
-    countries.some(({ code }) => code === defaultCountry.toUpperCase())
-      ? defaultCountry.toUpperCase()
+    countries.some(({ code }) => code === preferredCountry)
+      ? preferredCountry
       : 'US'
   ) as CountryCode
   const [country, setCountry] = useState<CountryCode>(initialCountry)
@@ -125,7 +127,7 @@ export const PhoneNumberField: GroupFieldClientComponent = (rawProps) => {
           />
         </div>
       </div>
-      {fieldDescription ? <FieldDescription description={fieldDescription} /> : null}
+      {fieldDescription ? <p className="payload-phone-number__description">{fieldDescription}</p> : null}
       {error ? <div className="payload-phone-number__error" role="alert">{error}</div> : null}
       {showFormattedPreviews && isValid && parsed ? (
         <div className="payload-phone-number__previews" aria-live="polite">
