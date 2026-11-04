@@ -1,7 +1,12 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
-import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, type CountryCode } from 'libphonenumber-js/max'
+import {
+  parsePhoneNumberFromString,
+  getCountries,
+  getCountryCallingCode,
+  type CountryCode,
+} from 'libphonenumber-js/max'
 import { FieldError, FieldLabel, ReactSelect, TextInput, useField } from '@payloadcms/ui'
 import type { GroupFieldClientProps } from 'payload'
 import './phone-number-field.css'
@@ -21,6 +26,7 @@ const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
 const countries = getCountries()
   .map((code) => ({ code, name: countryNames.of(code) ?? code }))
   .sort((a, b) => a.name.localeCompare(b.name))
+
 const countryOptions = countries.map(({ code, name }) => ({
   label: name + ' (+' + getCountryCallingCode(code) + ')',
   value: code,
@@ -28,6 +34,19 @@ const countryOptions = countries.map(({ code, name }) => ({
 
 function digits(value: string): string {
   return value.replace(/\D/g, '')
+}
+
+function parseInput(value: string, country: CountryCode) {
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+
+  // Accept the common international access prefix as well as an explicit plus.
+  const international = trimmed.startsWith('+') || trimmed.startsWith('00')
+  const normalized = trimmed.startsWith('00') ? '+' + trimmed.slice(2) : trimmed
+
+  return international
+    ? parsePhoneNumberFromString(normalized)
+    : parsePhoneNumberFromString(normalized, country)
 }
 
 export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberFieldProps> = (rawProps) => {
@@ -43,28 +62,22 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
 
   const { value: storedValue, setValue, showError } = useField<PhoneNumberValue>({ path })
   const e164Value = storedValue?.e164
-  const storedCountry = e164Value ? parsePhoneNumberFromString(e164Value)?.country : undefined
-  const preferredCountry = storedCountry ?? defaultCountry.toUpperCase()
+  const storedPhone = e164Value ? parsePhoneNumberFromString(e164Value) : undefined
+  const preferredCountry = storedPhone?.country ?? defaultCountry.toUpperCase()
   const initialCountry = (
     countries.some(({ code }) => code === preferredCountry)
       ? preferredCountry
       : 'US'
   ) as CountryCode
+
   const [country, setCountry] = useState<CountryCode>(initialCountry)
   const [input, setInput] = useState<string>(() => {
-    if (!e164Value) return ''
-    const parsed = parsePhoneNumberFromString(e164Value)
-    return parsed?.formatInternational() ?? e164Value
+    if (!storedPhone) return ''
+    return storedPhone.formatNational()
   })
   const [touched, setTouched] = useState(false)
 
-  const parsed = useMemo(() => {
-    if (!input.trim()) return undefined
-    return input.trim().startsWith('+')
-      ? parsePhoneNumberFromString(input)
-      : parsePhoneNumberFromString(input, country)
-  }, [input, country])
-
+  const parsed = useMemo(() => parseInput(input, country), [input, country])
   const isValid = Boolean(parsed?.isValid() && !parsed.ext)
   const hasInput = input.trim().length > 0
   const error = hasInput && touched && !isValid
@@ -73,18 +86,34 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
 
   const onInputChange = (nextValue: string) => {
     setTouched(true)
-    setInput(nextValue)
+
     if (!nextValue.trim()) {
+      setInput('')
       setValue(null)
       return
     }
 
-    const phone = nextValue.trim().startsWith('+')
-      ? parsePhoneNumberFromString(nextValue)
-      : parsePhoneNumberFromString(nextValue, country)
+    const phone = parseInput(nextValue, country)
+    const isInternational = /^\s*(?:\+|00)/.test(nextValue)
 
+    if (isInternational && phone?.isValid() && !phone.ext && phone.country) {
+      // Detect the country from the international number, update the selector,
+      // and replace the dial-code-prefixed value with the national format.
+      setCountry(phone.country)
+      setInput(phone.formatNational())
+      setValue({
+        e164: phone.number,
+        national: digits(phone.formatNational()),
+      })
+      return
+    }
+
+    setInput(nextValue)
     if (phone?.isValid() && !phone.ext) {
-      setValue({ e164: phone.number, national: digits(phone.formatNational()) })
+      setValue({
+        e164: phone.number,
+        national: digits(phone.formatNational()),
+      })
     } else {
       setValue({ e164: nextValue.trim(), national: '' })
     }
@@ -94,10 +123,14 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     const next = nextCountry as CountryCode
     setCountry(next)
     if (input.trim()) setTouched(true)
-    if (input && !input.trim().startsWith('+')) {
+
+    if (input.trim() && !/^\s*(?:\+|00)/.test(input)) {
       const phone = parsePhoneNumberFromString(input, next)
       if (phone?.isValid() && !phone.ext) {
-        setValue({ e164: phone.number, national: digits(phone.formatNational()) })
+        setValue({
+          e164: phone.number,
+          national: digits(phone.formatNational()),
+        })
       } else {
         setValue({ e164: input.trim(), national: '' })
       }
@@ -119,6 +152,19 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             onChange={(option) => {
               if (option && !Array.isArray(option)) onCountryChange(String(option.value))
             }}
+            formatOptionLabel={(option) => (
+              <span className="payload-phone-number__country-option">
+                <img
+                  src={`https://flagcdn.com/w20/${option.value.toLowerCase()}.png`}
+                  srcSet={`https://flagcdn.com/w40/${option.value.toLowerCase()}.png 2x`}
+                  width="20"
+                  height="15"
+                  loading="lazy"
+                  alt=""
+                />
+                <span>{option.label}</span>
+              </span>
+            )}
             isClearable={false}
             placeholder="Country"
           />
