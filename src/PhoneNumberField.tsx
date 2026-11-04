@@ -129,7 +129,6 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             inputMode="tel"
             autoComplete="tel"
             description={fieldDescription}
-            showError={showError}
             aria-invalid={Boolean(error)}
           />
         </div>
