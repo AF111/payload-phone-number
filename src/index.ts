@@ -15,15 +15,30 @@ export type PhoneNumberFieldOptions = {
 }
 
 export type PhoneNumberValue = {
-  e164: string
-  national: string
+  /** Canonical E.164 number, including the leading +. */
+  intlFormat: string
+  /** National number containing digits only, retaining the trunk prefix where applicable. */
+  nationalFormat: string
+  /** International calling code, including the leading +. */
+  dialingCode: string
+  /** ISO 3166-1 alpha-2 region code, or null for non-geographic numbers. */
+  country: string | null
+  /** English country/region name, or null for non-geographic numbers. */
+  countryName: string | null
+  /** libphonenumber number type, e.g. MOBILE or FIXED_LINE; may be null if unknown. */
+  numberType: string | null
 }
 
 /**
- * Creates a Payload v4 group field that stores normalized phone number values:
- * { e164: '+46701234567', national: '0701234567' }.
- *
- * The national value contains digits only and retains the national trunk prefix.
+ * Creates a Payload group field that stores normalized phone number values:
+ * {
+ *   intlFormat: '+46701234567',
+ *   nationalFormat: '0701234567',
+ *   dialingCode: '+46',
+ *   country: 'SE',
+ *   countryName: 'Sweden',
+ *   numberType: 'MOBILE'
+ * }.
  */
 export const phoneNumberField = (
   name: string,
@@ -36,6 +51,8 @@ export const phoneNumberField = (
     label = 'Phone number',
     description,
   } = options
+
+  const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
 
   return {
     name,
@@ -58,28 +75,49 @@ export const phoneNumberField = (
       },
     },
     fields: [
-      { name: 'e164', type: 'text', admin: { hidden: true } },
-      { name: 'national', type: 'text', admin: { hidden: true } },
+      { name: 'intlFormat', type: 'text', admin: { hidden: true } },
+      { name: 'nationalFormat', type: 'text', admin: { hidden: true } },
+      { name: 'dialingCode', type: 'text', admin: { hidden: true } },
+      { name: 'country', type: 'text', admin: { hidden: true } },
+      { name: 'countryName', type: 'text', admin: { hidden: true } },
+      { name: 'numberType', type: 'text', admin: { hidden: true } },
     ],
     validate: (value) => {
       const phoneValue = value as Partial<PhoneNumberValue> | null | undefined
-      const hasE164 = typeof phoneValue?.e164 === 'string' && phoneValue.e164.trim().length > 0
-      const hasNational = typeof phoneValue?.national === 'string' && phoneValue.national.trim().length > 0
+      const hasIntlFormat =
+        typeof phoneValue?.intlFormat === 'string' && phoneValue.intlFormat.trim().length > 0
+      const hasNationalFormat =
+        typeof phoneValue?.nationalFormat === 'string' && phoneValue.nationalFormat.trim().length > 0
 
       // Payload can submit an untouched optional group as an empty object.
-      if (!hasE164 && !hasNational) {
+      if (!hasIntlFormat && !hasNationalFormat) {
         return required ? 'A valid phone number is required.' : true
       }
-      if (!hasE164 || !hasNational) {
+      if (
+        !hasIntlFormat ||
+        !hasNationalFormat ||
+        !phoneValue?.dialingCode ||
+        phoneValue.country === undefined ||
+        phoneValue.countryName === undefined ||
+        phoneValue.numberType === undefined
+      ) {
         return 'Enter a valid phone number. The stored values must be normalized.'
       }
 
-      const parsed = parsePhoneNumberFromString(phoneValue.e164)
+      const parsed = parsePhoneNumberFromString(phoneValue.intlFormat)
+      const expectedCountry = parsed?.country ?? null
+      const expectedCountryName = expectedCountry ? countryNames.of(expectedCountry) ?? null : null
+      const expectedNumberType = parsed?.getType() ?? null
+
       if (
         !parsed?.isValid() ||
-        parsed.number !== phoneValue.e164 ||
-        !/^\d+$/.test(phoneValue.national) ||
-        phoneValue.national !== parsed.formatNational().replace(/\D/g, '')
+        parsed.number !== phoneValue.intlFormat ||
+        !/^\d+$/.test(phoneValue.nationalFormat) ||
+        phoneValue.nationalFormat !== parsed.formatNational().replace(/\D/g, '') ||
+        phoneValue.dialingCode !== \`+\${parsed.countryCallingCode}\` ||
+        phoneValue.country !== expectedCountry ||
+        phoneValue.countryName !== expectedCountryName ||
+        phoneValue.numberType !== expectedNumberType
       ) {
         return 'Enter a valid phone number. The stored values must be normalized.'
       }
