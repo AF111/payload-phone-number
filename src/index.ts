@@ -104,16 +104,18 @@ export const phoneNumberField = (
         return 'Enter a valid phone number. The stored values must be normalized.'
       }
 
-      const parsed = parsePhoneNumberFromString(phoneValue.intlFormat)
+      const intlFormat = phoneValue.intlFormat
+      const nationalFormat = phoneValue.nationalFormat
+      const parsed = parsePhoneNumberFromString(intlFormat)
       const expectedCountry = parsed?.country ?? null
       const expectedCountryName = expectedCountry ? countryNames.of(expectedCountry) ?? null : null
       const expectedNumberType = parsed?.getType() ?? null
 
       if (
         !parsed?.isValid() ||
-        parsed.number !== phoneValue.intlFormat ||
-        !/^\d+$/.test(phoneValue.nationalFormat) ||
-        phoneValue.nationalFormat !== parsed.formatNational().replace(/\D/g, '') ||
+        parsed.number !== intlFormat ||
+        !/^\d+$/.test(nationalFormat) ||
+        nationalFormat !== parsed.formatNational().replace(/\D/g, '') ||
         phoneValue.dialingCode !== `+${parsed.countryCallingCode}` ||
         phoneValue.country !== expectedCountry ||
         phoneValue.countryName !== expectedCountryName ||
