@@ -19,14 +19,31 @@
   max-width: min(230px, 48%);
 }
 
-.payload-phone-number__country .rs__control,
-.payload-phone-number__country [class*="control"] {
+.payload-phone-number__country .rs__control {
+  display: flex;
+  align-items: center;
   min-width: 0;
+  min-height: var(--base, 40px);
   width: 100%;
 }
 
-.payload-phone-number__country > div {
-  width: 100%;
+.payload-phone-number__country .rs__value-container {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.payload-phone-number__country .rs__single-value {
+  display: flex;
+  align-items: center;
+  max-width: calc(100% - 4px);
+  margin: 0;
+  transform: none;
+}
+
+.payload-phone-number__country .rs__input-container {
+  display: flex;
+  align-items: center;
 }
 
 .payload-phone-number__country-option {
@@ -34,6 +51,7 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+  line-height: 1.25;
 }
 
 .payload-phone-number__country-option img {
@@ -51,36 +69,36 @@
   white-space: nowrap;
 }
 
-.payload-phone-number__previews {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.payload-phone-number__previews > div {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.payload-phone-number__input {
+  flex: 1 1 auto;
   min-width: 0;
-  padding: 10px 12px;
-  background: var(--theme-elevation-50);
-  border: 1px solid var(--theme-elevation-100);
+}
+
+.payload-phone-number__input input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-height: var(--base, 40px);
+  padding: 0 12px;
+  color: var(--theme-text);
+  background: var(--theme-input-bg, var(--theme-elevation-0));
+  border: 1px solid var(--theme-elevation-300);
   border-radius: var(--style-radius-s, 4px);
+  font: inherit;
 }
 
-.payload-phone-number__previews span {
+.payload-phone-number__input input:focus {
+  outline: 2px solid var(--theme-elevation-800);
+  outline-offset: 1px;
+}
+
+.payload-phone-number__input input[aria-invalid='true'] {
+  border-color: var(--theme-error-500);
+}
+
+.payload-phone-number__description {
   color: var(--theme-elevation-600);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-
-.payload-phone-number__previews strong {
-  overflow-wrap: anywhere;
   font-size: 13px;
-  font-weight: 500;
 }
 
 @media (max-width: 600px) {
@@ -90,9 +108,7 @@
 
   .payload-phone-number__country {
     flex-basis: auto;
-  }
-
-  .payload-phone-number__previews {
-    grid-template-columns: 1fr;
+    width: min(100%, 230px);
+    max-width: 100%;
   }
 }
