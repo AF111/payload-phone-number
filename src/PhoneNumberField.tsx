@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, type CountryCode } from 'libphonenumber-js'
-import { FieldLabel, TextInput, useField } from '@payloadcms/ui'
+import { FieldError, FieldLabel, TextInput, useField } from '@payloadcms/ui'
 import type { GroupFieldClientProps } from 'payload'
 import './phone-number-field.css'
 
@@ -134,7 +134,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
           />
         </div>
       </div>
-      {error ? <div className="payload-phone-number__error" role="alert">{error}</div> : null}
+      <FieldError path={path} message={error} showError={Boolean(error) || showError} />
       {showFormattedPreviews && isValid && parsed ? (
         <div className="payload-phone-number__previews" aria-live="polite">
           <div>
