@@ -32,7 +32,7 @@ const countryOptions = countries.map(({ code, name }) => ({
 }))
 
 function digits(value: string): string {
-  return value.replace(/\\D/g, '')
+  return value.replace(/\D/g, '')
 }
 
 function parseInput(value: string, country: CountryCode) {
@@ -65,21 +65,25 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     field,
   } = rawProps as GroupFieldClientProps & PhoneNumberFieldProps
 
-  // A Payload group is made up of child field paths. Updating the group path
-  // itself can leave the nested fields empty and serialize as { phone: {} }.
-  const { value: e164Value, setValue: setE164Value, showError } = useField<string | null>({
-    path: `${path}.e164`,
+  // A Payload group is made up of child field paths. Update each nested path
+  // so Payload serializes the group with its complete normalized value.
+  const { value: intlFormatValue, setValue: setIntlFormatValue, showError } = useField<string | null>({
+    path: \`\${path}.intlFormat\`,
   })
-  const { value: nationalValue, setValue: setNationalValue } = useField<string | null>({
-    path: `${path}.national`,
+  const { value: nationalFormatValue, setValue: setNationalFormatValue } = useField<string | null>({
+    path: \`\${path}.nationalFormat\`,
   })
+  const { setValue: setDialingCode } = useField<string | null>({ path: \`\${path}.dialingCode\` })
+  const { setValue: setCountryValue } = useField<string | null>({ path: \`\${path}.country\` })
+  const { setValue: setCountryName } = useField<string | null>({ path: \`\${path}.countryName\` })
+  const { setValue: setNumberType } = useField<string | null>({ path: \`\${path}.numberType\` })
 
-  const initialCountry = getCountry(e164Value ?? undefined, defaultCountry)
+  const initialCountry = getCountry(intlFormatValue ?? undefined, defaultCountry)
   const [country, setCountry] = useState<CountryCode>(initialCountry)
   const [input, setInput] = useState<string>(() => {
-    if (nationalValue) return nationalValue
-    if (!e164Value) return ''
-    return parsePhoneNumberFromString(e164Value)?.formatNational() ?? e164Value
+    if (nationalFormatValue) return nationalFormatValue
+    if (!intlFormatValue) return ''
+    return parsePhoneNumberFromString(intlFormatValue)?.formatNational() ?? intlFormatValue
   })
   const [validationError, setValidationError] = useState<string | undefined>()
   const [validatedPhone, setValidatedPhone] = useState<PhoneNumber | undefined>()
@@ -88,8 +92,12 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     const trimmed = rawInput.trim()
 
     if (!trimmed) {
-      setE164Value(null)
-      setNationalValue(null)
+      setIntlFormatValue(null)
+      setNationalFormatValue(null)
+      setDialingCode(null)
+      setCountryValue(null)
+      setCountryName(null)
+      setNumberType(null)
       setValidatedPhone(undefined)
       setValidationError(required ? 'A valid phone number is required.' : undefined)
       return
@@ -102,7 +110,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     )
 
     if (
-      /^\\s*(?:\\+|00)/.test(trimmed) &&
+      /^\s*(?:\+|00)/.test(trimmed) &&
       phone &&
       canSelectDetectedCountry &&
       !phone.ext
@@ -114,17 +122,25 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
 
     if (phone?.isValid() && !phone.ext) {
       const national = digits(phone.formatNational())
-      setE164Value(phone.number)
-      setNationalValue(national)
+      const phoneCountry = phone.country ?? null
+      setIntlFormatValue(phone.number)
+      setNationalFormatValue(national)
+      setDialingCode(\`+\${phone.countryCallingCode}\`)
+      setCountryValue(phoneCountry)
+      setCountryName(phoneCountry ? countryNames.of(phoneCountry) ?? null : null)
+      setNumberType(phone.getType() ?? null)
       setValidatedPhone(phone)
       setValidationError(undefined)
       return
     }
 
-    // Keep invalid input visible and let the field/server validation explain
-    // the problem; never write a partial value as a normalized national number.
-    setE164Value(trimmed)
-    setNationalValue('')
+    // Keep invalid input visible and let server validation reject partial data.
+    setIntlFormatValue(trimmed)
+    setNationalFormatValue('')
+    setDialingCode('')
+    setCountryValue(null)
+    setCountryName(null)
+    setNumberType(null)
     setValidatedPhone(undefined)
     setValidationError('Enter a valid phone number for the selected country.')
   }
@@ -157,8 +173,8 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             formatOptionLabel={(option) => (
               <span className="payload-phone-number__country-option">
                 <img
-                  src={`https://flagcdn.com/w20/${String(option.value).toLowerCase()}.png`}
-                  srcSet={`https://flagcdn.com/w40/${String(option.value).toLowerCase()}.png 2x`}
+                  src={\`https://flagcdn.com/w20/\${String(option.value).toLowerCase()}.png\`}
+                  srcSet={\`https://flagcdn.com/w40/\${String(option.value).toLowerCase()}.png 2x\`}
                   width="20"
                   height="15"
                   loading="lazy"
