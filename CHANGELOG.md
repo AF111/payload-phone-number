@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2
+
+- Fix Payload v4 ReactSelect prop typing and localized description typing.
+- Format asynchronously hydrated existing values without marking the form as edited.
+- Keep the selected country label vertically centered.
+- Add server-side normalization and metadata validation tests.
+- Run CI dependency installation without lifecycle scripts, then run typecheck, build, and tests as separate steps.
+
+
 ## 0.2.1
 
 - Remove the formatted preview panels; display the validated national format directly in the input.
