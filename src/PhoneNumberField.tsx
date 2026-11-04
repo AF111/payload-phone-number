@@ -37,7 +37,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     field,
   } = rawProps as GroupFieldClientProps & PhoneNumberFieldProps
 
-  const { value: storedValue, setValue } = useField<PhoneNumberValue>({ path })
+  const { value: storedValue, setValue, showError } = useField<PhoneNumberValue>({ path })
   const e164Value = storedValue?.e164
   const storedCountry = e164Value ? parsePhoneNumberFromString(e164Value)?.country : undefined
   const preferredCountry = storedCountry ?? defaultCountry.toUpperCase()
@@ -123,11 +123,12 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             placeholder="Enter phone number"
             inputMode="tel"
             autoComplete="tel"
+            description={fieldDescription}
+            showError={showError}
             aria-invalid={Boolean(error)}
           />
         </div>
       </div>
-      {fieldDescription ? <p className="payload-phone-number__description">{fieldDescription}</p> : null}
       {error ? <div className="payload-phone-number__error" role="alert">{error}</div> : null}
       {showFormattedPreviews && isValid && parsed ? (
         <div className="payload-phone-number__previews" aria-live="polite">
