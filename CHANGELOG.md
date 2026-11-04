@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1
+
+- Remove the formatted preview panels; display the validated national format directly in the input.
+- Format existing valid numbers on initial load and after blur.
+- Avoid marking Payload data as edited when an untouched input is focused and blurred.
+- Center the selected country flag and label in the country selector.
+
+
 ## 0.2.0
 
 - Fix TypeScript narrowing in server-side normalized value validation.
