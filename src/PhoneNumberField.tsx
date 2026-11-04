@@ -234,14 +234,16 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
               isFocused.current = false
             }}
           />
+          <div className="payload-phone-number__error">
+            <FieldError
+              path={path}
+              message={validationError}
+              showError={Boolean(validationError) || showError}
+            />
+          </div>
         </div>
       </div>
       {fieldDescription ? <div className="payload-phone-number__description">{fieldDescription}</div> : null}
-      <FieldError
-        path={path}
-        message={validationError}
-        showError={Boolean(validationError) || showError}
-      />
     </div>
   )
 }
