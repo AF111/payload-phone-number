@@ -82,20 +82,23 @@
   width: 100%;
   min-height: var(--base, 40px);
   padding: 0 12px;
-  color: var(--theme-text);
-  background: var(--theme-input-bg, var(--theme-elevation-0));
-  border: 1px solid var(--theme-elevation-300);
+  color: var(--theme-text, inherit);
+  background: var(--theme-input-bg, var(--theme-elevation-0, transparent));
+  /* Keep a visible field boundary in both Payload light and dark themes. */
+  border: 1px solid var(--theme-elevation-400, #777);
   border-radius: var(--style-radius-s, 4px);
   font: inherit;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .payload-phone-number__input input:focus {
-  outline: 2px solid var(--theme-elevation-800);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--theme-elevation-800, currentColor);
+  box-shadow: 0 0 0 2px var(--theme-elevation-800, currentColor);
 }
 
 .payload-phone-number__input input[aria-invalid='true'] {
-  border-color: var(--theme-error-500);
+  border-color: var(--theme-error-500, #d63638);
 }
 
 .payload-phone-number__description {
