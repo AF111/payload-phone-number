@@ -38,7 +38,7 @@ export const PhoneNumberField: TextFieldClientComponent = (props) => {
 
   const { value: e164Value, setValue: setE164 } = useField<string>({ path: `${path}.e164` })
   const { value: nationalValue, setValue: setNational } = useField<string>({ path: `${path}.national` })
-  const initialCountry = (defaultCountry.toUpperCase() in Object.fromEntries(countries.map(c => [c.code, true])
+  const initialCountry = (countries.some(({ code }) => code === defaultCountry.toUpperCase())
     ? defaultCountry.toUpperCase()
     : 'US') as CountryCode
   const [country, setCountry] = useState<CountryCode>(initialCountry)
@@ -118,7 +118,7 @@ export const PhoneNumberField: TextFieldClientComponent = (props) => {
             path={path}
             value={input}
             onChange={(event: React.ChangeEvent<HTMLInputElement> | string) =>
-              onInputChange(typeof event === 'string' ? event : event.target.value)
+              onInputChange(event.target.value)
             }
             onBlur={() => setTouched(true)}
             placeholder="Enter phone number"
