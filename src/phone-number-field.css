@@ -38,7 +38,8 @@
   align-items: center;
   max-width: calc(100% - 4px);
   margin: 0;
-  transform: none;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .payload-phone-number__country .rs__input-container {
