@@ -65,8 +65,8 @@ export const phoneNumberField = (
       if (
         !parsed?.isValid() ||
         parsed.number !== phoneValue.e164 ||
-        !/^\\d+$/.test(phoneValue.national) ||
-        phoneValue.national !== parsed.formatNational().replace(/\\D/g, '')
+        !/^\d+$/.test(phoneValue.national) ||
+        phoneValue.national !== parsed.formatNational().replace(/\D/g, '')
       ) {
         return 'Enter a valid phone number. The stored values must be normalized.'
       }
