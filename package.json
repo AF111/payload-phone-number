@@ -1,6 +1,6 @@
 {
   "name": "payload-phone-number",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A Payload CMS v4 phone number field powered by libphonenumber-js.",
   "license": "MIT",
   "type": "module",
