@@ -47,7 +47,13 @@ export const phoneNumberField = (
       components: {
         Field: {
           path: 'payload-phone-number/client#PhoneNumberField',
-          clientProps: { defaultCountry, showFormattedPreviews, required, label, description },
+          clientProps: {
+            defaultCountry,
+            showFormattedPreviews,
+            required,
+            label,
+            ...(description ? { description } : {}),
+          },
         },
       },
     },
