@@ -47,26 +47,36 @@ export const Contacts: CollectionConfig = {
 
 ## Stored data
 
-The field is a Payload group. It stores two normalized strings:
+The field is a Payload group. It stores the canonical number and useful country/number metadata together:
 
 ```json
 {
   "phoneNumber": {
-    "e164": "+46701234567",
-    "national": "0701234567"
+    "intlFormat": "+46701234567",
+    "nationalFormat": "0701234567",
+    "dialingCode": "+46",
+    "country": "SE",
+    "countryName": "Sweden",
+    "numberType": "MOBILE"
   }
 }
 ```
 
-- `e164`: canonical international number, including the leading `+`, with no spaces or punctuation.
-- `national`: national number with the national trunk prefix where applicable, digits only, with no spaces or punctuation.
+| Property | Description |
+| --- | --- |
+| `intlFormat` | Canonical E.164 number, including the leading `+`, with no spaces or punctuation. |
+| `nationalFormat` | National number with the trunk prefix where applicable, digits only. |
+| `dialingCode` | International calling code, including the leading `+`. |
+| `country` | ISO 3166-1 alpha-2 country/region code, e.g. `SE`. Null for non-geographic numbers. |
+| `countryName` | English country/region name, e.g. `Sweden`. Null for non-geographic numbers. |
+| `numberType` | libphonenumber classification such as `MOBILE`, `FIXED_LINE`, or `VOIP`; null when unavailable. |
 
 The admin UI displays libphonenumber's human-readable formats, for example:
 
 - International: `+46 70 123 45 67`
 - National: `070-123 45 67`
 
-Formatting is for display only; it is not written to either stored value.
+Display formatting is separate from the normalized stored values. `intlFormat` remains E.164, while `nationalFormat` is digits only.
 
 ## Options
 
@@ -83,11 +93,15 @@ Formatting is for display only; it is not written to either stored value.
 - Numbers beginning with `+` or the international access prefix `00` are detected as international numbers, regardless of the currently selected country.
 - When the input loses focus, an international number that identifies a country updates the country selector and replaces the dialing-code-prefixed input with its national format.
 - Parsing and validation are deferred until the input loses focus, rather than running on every keystroke.
-- Country flags are loaded from FlagCDN.
 - National-format input is interpreted using the selected country.
 - Invalid or incomplete input is not stored as a normalized number. Empty optional groups are accepted; partially populated groups are rejected.
-- Server-side field validation checks that the E.164 and national values are valid and consistent.
+- Server-side validation checks that the stored number, calling code, country, country name, and number type are consistent.
+- Country flags are loaded from FlagCDN.
 - Extensions are currently not supported; enter the main phone number without an extension.
+
+## Migration note
+
+Version 0.2.0 changes the stored property names from `e164` and `national` to `intlFormat` and `nationalFormat`, and adds metadata fields. Existing documents are not automatically migrated. Update existing stored group values before relying on the new server-side validation.
 
 ## Development
 
