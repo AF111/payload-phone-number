@@ -2,6 +2,9 @@
 
 ## 0.2.0
 
+- Fix TypeScript narrowing in server-side normalized value validation.
+- Handle input blur on the containing field wrapper instead of passing an unsupported HTML attribute.
+
 - Rename stored `e164` and `national` properties to `intlFormat` and `nationalFormat`.
 - Store the international dialing code, ISO country code, English country name, and detected number type.
 - Validate that all stored metadata matches the normalized phone number.
