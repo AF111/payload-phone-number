@@ -155,14 +155,14 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             formatOptionLabel={(option) => (
               <span className="payload-phone-number__country-option">
                 <img
-                  src={`https://flagcdn.com/w20/${option.value.toLowerCase()}.png`}
-                  srcSet={`https://flagcdn.com/w40/${option.value.toLowerCase()}.png 2x`}
+                  src={`https://flagcdn.com/w20/${String(option.value).toLowerCase()}.png`}
+                  srcSet={`https://flagcdn.com/w40/${String(option.value).toLowerCase()}.png 2x`}
                   width="20"
                   height="15"
                   loading="lazy"
                   alt=""
                 />
-                <span>{option.label}</span>
+                <span>{String(option.label)}</span>
               </span>
             )}
             isClearable={false}
