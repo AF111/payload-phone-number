@@ -2,7 +2,7 @@
 
 A phone-number field for **Payload CMS v4**, powered by Google's full phone-number metadata through [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js).
 
-It uses Payload's own admin UI components for the label, description, and text input, with Payload's searchable country selector and formatted previews that adapt to Payload's theme variables.
+It uses Payload's own admin UI components for the label, description, and text input, with a searchable country selector, country flags from [FlagCDN](https://flagcdn.com/), and formatted previews that adapt to Payload's theme variables.
 
 ## Install from GitHub
 
@@ -76,11 +76,13 @@ Formatting is for display only; it is not written to either stored value.
 | `showFormattedPreviews` | `true` | Show international and national display formats |
 | `required` | `false` | Require a valid phone number |
 | `label` | `'Phone number'` | Admin field label |
-| `description` | — | Help text below the input |
+| `description` | — | Help text below the field |
 
 ## Behavior and validation
 
-- Numbers beginning with `+` are parsed as international numbers, regardless of the selected country.
+- Numbers beginning with `+` or the international access prefix `00` are detected as international numbers, regardless of the currently selected country.
+- Once a valid international number identifies a country, the country selector updates automatically and the dialing code is removed from the input, leaving the national-format number.
+- Country flags are loaded from FlagCDN.
 - National-format input is interpreted using the selected country.
 - Invalid or incomplete input is not stored as a normalized number.
 - Server-side field validation checks that the E.164 and national values are valid and consistent.
