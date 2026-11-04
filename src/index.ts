@@ -57,8 +57,11 @@ export const phoneNumberField = (
     ],
     validate: (value) => {
       const phoneValue = value as Partial<PhoneNumberValue> | null | undefined
-      if (!phoneValue?.e164 || !phoneValue?.national) {
+      if (!phoneValue) {
         return required ? 'A valid phone number is required.' : true
+      }
+      if (!phoneValue.e164 || !phoneValue.national) {
+        return 'Enter a valid phone number. The stored values must be normalized.'
       }
 
       const parsed = parsePhoneNumberFromString(phoneValue.e164)
