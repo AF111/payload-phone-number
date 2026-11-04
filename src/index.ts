@@ -4,8 +4,6 @@ import type { Field } from 'payload'
 export type PhoneNumberFieldOptions = {
   /** ISO 3166-1 alpha-2 country code used when the user enters a national number. */
   defaultCountry?: string
-  /** Show the formatted international and national previews below the input. */
-  showFormattedPreviews?: boolean
   /** Mark the field as required. */
   required?: boolean
   /** Field label shown in the Payload admin panel. */
@@ -46,7 +44,6 @@ export const phoneNumberField = (
 ): Field => {
   const {
     defaultCountry = 'US',
-    showFormattedPreviews = true,
     required = false,
     label = 'Phone number',
     description,
@@ -66,7 +63,6 @@ export const phoneNumberField = (
           path: 'payload-phone-number/client#PhoneNumberField',
           clientProps: {
             defaultCountry,
-            showFormattedPreviews,
             required,
             label,
             ...(description ? { description } : {}),
