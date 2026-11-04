@@ -1,8 +1,8 @@
 # Payload Phone Number
 
-A phone-number field for **Payload CMS v4**, powered by Google's libphonenumber metadata through [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js).
+A phone-number field for **Payload CMS v4**, powered by Google's full phone-number metadata through [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js).
 
-It uses Payload's own admin UI components for the label, description, and text input, with a responsive country selector and formatted previews that adapt to Payload's theme variables.
+It uses Payload's own admin UI components for the label, description, and text input, with Payload's searchable country selector and formatted previews that adapt to Payload's theme variables.
 
 ## Install from GitHub
 
