@@ -8,7 +8,7 @@
 
 .payload-phone-number__controls {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 8px;
 }
 
@@ -19,7 +19,14 @@
   max-width: min(230px, 48%);
 }
 
-.payload-phone-number__country .rs__control {
+/* Payload's ReactSelect adapter supplies its own class prefix. Keep the
+   selector resilient to its generated class names across Payload versions. */
+.payload-phone-number__country > div {
+  width: 100%;
+}
+
+.payload-phone-number__country [class*='control'] {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   min-width: 0;
@@ -27,24 +34,18 @@
   width: 100%;
 }
 
-.payload-phone-number__country .rs__value-container {
+.payload-phone-number__country [class*='value-container'] {
   display: flex;
   align-items: center;
   min-width: 0;
 }
 
-.payload-phone-number__country .rs__single-value {
+.payload-phone-number__country [class*='single-value'] {
   display: flex;
   align-items: center;
   max-width: calc(100% - 4px);
   margin: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.payload-phone-number__country .rs__input-container {
-  display: flex;
-  align-items: center;
+  transform: none;
 }
 
 .payload-phone-number__country-option {
@@ -105,6 +106,7 @@
 @media (max-width: 600px) {
   .payload-phone-number__controls {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .payload-phone-number__country {
