@@ -72,6 +72,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     : undefined
 
   const onInputChange = (nextValue: string) => {
+    setTouched(true)
     setInput(nextValue)
     if (!nextValue.trim()) {
       setValue(null)
@@ -92,6 +93,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
   const onCountryChange = (nextCountry: string) => {
     const next = nextCountry as CountryCode
     setCountry(next)
+    if (input.trim()) setTouched(true)
     if (input && !input.trim().startsWith('+')) {
       const phone = parsePhoneNumberFromString(input, next)
       if (phone?.isValid() && !phone.ext) {
@@ -115,7 +117,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             options={countryOptions}
             value={countryOptions.find((option) => option.value === country)}
             onChange={(option) => {
-              if (option && !Array.isArray(option)) onCountryChange(option.value)
+              if (option && !Array.isArray(option)) onCountryChange(String(option.value))
             }}
             isClearable={false}
             placeholder="Country"
@@ -126,12 +128,9 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             path={path}
             value={input}
             onChange={(event) => onInputChange(event.target.value)}
-            onBlur={() => setTouched(true)}
             placeholder="Enter phone number"
-            inputMode="tel"
-            autoComplete="tel"
             description={fieldDescription}
-            aria-invalid={Boolean(error)}
+            htmlAttributes={{ autoComplete: 'tel' }}
           />
         </div>
       </div>
