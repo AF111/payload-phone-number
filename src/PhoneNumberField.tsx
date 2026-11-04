@@ -109,7 +109,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
 
   return (
     <div className="payload-phone-number">
-      <FieldLabel path={path} label={fieldLabel} required={required || field?.required} />
+      <FieldLabel path={path} label={fieldLabel} required={required} />
       <div className="payload-phone-number__controls">
         <div className="payload-phone-number__country">
           <ReactSelect
@@ -130,7 +130,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             showError={Boolean(error) || showError}
             path={path}
             value={input}
-            onChange={(event) => onInputChange(event.target.value)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => onInputChange(event.target.value)}
             placeholder="Enter phone number"
             description={fieldDescription}
             htmlAttributes={{ autoComplete: 'tel' }}
