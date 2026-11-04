@@ -2,7 +2,7 @@
 
 A phone-number field for **Payload CMS v4**, powered by Google's full phone-number metadata through [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js).
 
-It uses Payload's own admin UI components for the label, description, and text input, with a searchable country selector, country flags from [FlagCDN](https://flagcdn/), and a national-format display that is normalized on blur.
+It uses Payload's own admin UI components for the label, description, and text input, with a searchable country selector, country flags from [FlagCDN](https://flagcdn.com/), and a national-format display that is normalized on blur.
 
 ## Install from GitHub
 
