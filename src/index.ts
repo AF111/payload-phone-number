@@ -63,10 +63,14 @@ export const phoneNumberField = (
     ],
     validate: (value) => {
       const phoneValue = value as Partial<PhoneNumberValue> | null | undefined
-      if (!phoneValue) {
+      const hasE164 = typeof phoneValue?.e164 === 'string' && phoneValue.e164.trim().length > 0
+      const hasNational = typeof phoneValue?.national === 'string' && phoneValue.national.trim().length > 0
+
+      // Payload can submit an untouched optional group as an empty object.
+      if (!hasE164 && !hasNational) {
         return required ? 'A valid phone number is required.' : true
       }
-      if (!phoneValue.e164 || !phoneValue.national) {
+      if (!hasE164 || !hasNational) {
         return 'Enter a valid phone number. The stored values must be normalized.'
       }
 
