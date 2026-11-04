@@ -114,7 +114,7 @@ export const phoneNumberField = (
         parsed.number !== phoneValue.intlFormat ||
         !/^\d+$/.test(phoneValue.nationalFormat) ||
         phoneValue.nationalFormat !== parsed.formatNational().replace(/\D/g, '') ||
-        phoneValue.dialingCode !== \`+\${parsed.countryCallingCode}\` ||
+        phoneValue.dialingCode !== `+${parsed.countryCallingCode}` ||
         phoneValue.country !== expectedCountry ||
         phoneValue.countryName !== expectedCountryName ||
         phoneValue.numberType !== expectedNumberType
