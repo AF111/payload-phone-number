@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   parsePhoneNumberFromString,
   getCountries,
@@ -14,7 +14,6 @@ import './phone-number-field.css'
 export type PhoneNumberFieldProps = {
   path: string
   defaultCountry?: string
-  showFormattedPreviews?: boolean
   required?: boolean
   label?: string
   description?: string
@@ -99,6 +98,16 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
   )
   const [validationError, setValidationError] = useState<string | undefined>()
   const editedSinceFocus = useRef(false)
+  const isFocused = useRef(false)
+
+  // Payload can hydrate existing values after the first render. Keep the input display in sync
+  // without writing anything back to Payload unless the user actually edits the value.
+  useEffect(() => {
+    if (isFocused.current) return
+    const loadedCountry = getCountry(intlFormatValue ?? undefined, defaultCountry)
+    setCountry(loadedCountry)
+    setInput(getInitialDisplayValue(intlFormatValue, nationalFormatValue, loadedCountry))
+  }, [intlFormatValue, nationalFormatValue, defaultCountry])
 
   const validateAndStore = (rawInput: string, selectedCountry: CountryCode) => {
     const trimmed = rawInput.trim()
@@ -159,7 +168,12 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
   }
 
   const fieldLabel = label ?? field?.label ?? 'Phone number'
-  const fieldDescription = description ?? field?.admin?.description
+  const fieldDescription =
+    typeof description === 'string'
+      ? description
+      : typeof field?.admin?.description === 'string'
+        ? field.admin.description
+        : undefined
 
   return (
     <div className="payload-phone-number">
@@ -168,7 +182,6 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
         <div className="payload-phone-number__country">
           <ReactSelect
             aria-label="Country"
-            classNamePrefix="rs"
             options={countryOptions}
             value={countryOptions.find((option) => option.value === country)}
             onChange={(option) => {
@@ -201,6 +214,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             placeholder="Enter phone number"
             aria-invalid={Boolean(validationError) || showError}
             onFocus={() => {
+              isFocused.current = true
               editedSinceFocus.current = false
             }}
             onChange={(event) => {
@@ -209,8 +223,15 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
               setValidationError(undefined)
             }}
             onBlur={() => {
-              if (editedSinceFocus.current) validateAndStore(input, country)
+              if (editedSinceFocus.current) {
+                validateAndStore(input, country)
+              } else {
+                const loadedCountry = getCountry(intlFormatValue ?? undefined, defaultCountry)
+                setCountry(loadedCountry)
+                setInput(getInitialDisplayValue(intlFormatValue, nationalFormatValue, loadedCountry))
+              }
               editedSinceFocus.current = false
+              isFocused.current = false
             }}
           />
         </div>
