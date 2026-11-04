@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import {
   parsePhoneNumberFromString,
   getCountries,
   getCountryCallingCode,
   type CountryCode,
+  type PhoneNumber,
 } from 'libphonenumber-js/max'
 import { FieldError, FieldLabel, ReactSelect, TextInput, useField } from '@payloadcms/ui'
 import type { GroupFieldClientProps } from 'payload'
@@ -20,8 +21,6 @@ export type PhoneNumberFieldProps = {
   description?: string
 }
 
-type PhoneNumberValue = { e164?: string; national?: string } | null
-
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
 const countries = getCountries()
   .map((code) => ({ code, name: countryNames.of(code) ?? code }))
@@ -33,7 +32,7 @@ const countryOptions = countries.map(({ code, name }) => ({
 }))
 
 function digits(value: string): string {
-  return value.replace(/\D/g, '')
+  return value.replace(/\\D/g, '')
 }
 
 function parseInput(value: string, country: CountryCode) {
@@ -49,6 +48,12 @@ function parseInput(value: string, country: CountryCode) {
     : parsePhoneNumberFromString(normalized, country)
 }
 
+function getCountry(value: string | undefined, fallback: string): CountryCode {
+  const parsed = value ? parsePhoneNumberFromString(value) : undefined
+  const preferred = parsed?.country ?? fallback.toUpperCase()
+  return (countries.some(({ code }) => code === preferred) ? preferred : 'US') as CountryCode
+}
+
 export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberFieldProps> = (rawProps) => {
   const {
     path,
@@ -60,92 +65,78 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     field,
   } = rawProps as GroupFieldClientProps & PhoneNumberFieldProps
 
-  const { value: storedValue, setValue, showError } = useField<PhoneNumberValue>({ path })
-  const e164Value = storedValue?.e164
-  const storedPhone = e164Value ? parsePhoneNumberFromString(e164Value) : undefined
-  const preferredCountry = storedPhone?.country ?? defaultCountry.toUpperCase()
-  const initialCountry = (
-    countries.some(({ code }) => code === preferredCountry)
-      ? preferredCountry
-      : 'US'
-  ) as CountryCode
+  // A Payload group is made up of child field paths. Updating the group path
+  // itself can leave the nested fields empty and serialize as { phone: {} }.
+  const { value: e164Value, setValue: setE164Value, showError } = useField<string | null>({
+    path: `${path}.e164`,
+  })
+  const { value: nationalValue, setValue: setNationalValue } = useField<string | null>({
+    path: `${path}.national`,
+  })
 
+  const initialCountry = getCountry(e164Value ?? undefined, defaultCountry)
   const [country, setCountry] = useState<CountryCode>(initialCountry)
   const [input, setInput] = useState<string>(() => {
-    if (!storedPhone) return ''
-    return storedPhone.formatNational()
+    if (nationalValue) return nationalValue
+    if (!e164Value) return ''
+    return parsePhoneNumberFromString(e164Value)?.formatNational() ?? e164Value
   })
-  const [touched, setTouched] = useState(false)
+  const [validationError, setValidationError] = useState<string | undefined>()
+  const [validatedPhone, setValidatedPhone] = useState<PhoneNumber | undefined>()
 
-  const parsed = useMemo(() => parseInput(input, country), [input, country])
-  const isValid = Boolean(parsed?.isValid() && !parsed.ext)
-  const hasInput = input.trim().length > 0
-  const error = hasInput && touched && !isValid
-    ? 'Enter a valid phone number for the selected country.'
-    : undefined
+  const validateAndStore = (rawInput: string, selectedCountry: CountryCode) => {
+    const trimmed = rawInput.trim()
 
-  const onInputChange = (nextValue: string) => {
-    setTouched(true)
-
-    if (!nextValue.trim()) {
-      setInput('')
-      setValue(null)
+    if (!trimmed) {
+      setE164Value(null)
+      setNationalValue(null)
+      setValidatedPhone(undefined)
+      setValidationError(required ? 'A valid phone number is required.' : undefined)
       return
     }
 
-    const phone = parseInput(nextValue, country)
-    const isInternational = /^\s*(?:\+|00)/.test(nextValue)
+    const phone = parseInput(trimmed, selectedCountry)
+    const detectedCountry = phone?.country
+    const canSelectDetectedCountry = Boolean(
+      detectedCountry && countries.some(({ code }) => code === detectedCountry),
+    )
 
     if (
-      isInternational &&
-      phone?.country &&
-      !phone.ext &&
-      countries.some(({ code }) => code === phone.country)
+      /^\\s*(?:\\+|00)/.test(trimmed) &&
+      phone &&
+      canSelectDetectedCountry &&
+      !phone.ext
     ) {
-      // Detect as soon as libphonenumber can identify the country, even while
-      // the user is still typing an incomplete number. Remove the calling code
-      // from the input and keep the country selection in sync.
-      setCountry(phone.country)
+      // Country detection and dial-code removal happen only after blur.
+      setCountry(detectedCountry as CountryCode)
       setInput(phone.formatNational())
+    }
 
-      if (phone.isValid()) {
-        setValue({
-          e164: phone.number,
-          national: digits(phone.formatNational()),
-        })
-      } else {
-        setValue({ e164: phone.number, national: '' })
-      }
+    if (phone?.isValid() && !phone.ext) {
+      const national = digits(phone.formatNational())
+      setE164Value(phone.number)
+      setNationalValue(national)
+      setValidatedPhone(phone)
+      setValidationError(undefined)
       return
     }
 
-    setInput(nextValue)
-    if (phone?.isValid() && !phone.ext) {
-      setValue({
-        e164: phone.number,
-        national: digits(phone.formatNational()),
-      })
-    } else {
-      setValue({ e164: nextValue.trim(), national: '' })
-    }
+    // Keep invalid input visible and let the field/server validation explain
+    // the problem; never write a partial value as a normalized national number.
+    setE164Value(trimmed)
+    setNationalValue('')
+    setValidatedPhone(undefined)
+    setValidationError('Enter a valid phone number for the selected country.')
+  }
+
+  const onInputBlur = () => {
+    validateAndStore(input, country)
   }
 
   const onCountryChange = (nextCountry: string) => {
     const next = nextCountry as CountryCode
     setCountry(next)
-    if (input.trim()) setTouched(true)
-
-    if (input.trim() && !/^\s*(?:\+|00)/.test(input)) {
-      const phone = parsePhoneNumberFromString(input, next)
-      if (phone?.isValid() && !phone.ext) {
-        setValue({
-          e164: phone.number,
-          national: digits(phone.formatNational()),
-        })
-      } else {
-        setValue({ e164: input.trim(), national: '' })
-      }
-    }
+    if (input.trim()) validateAndStore(input, next)
   }
 
   const fieldLabel = label ?? field?.label ?? 'Phone number'
@@ -183,26 +174,40 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
         <div className="payload-phone-number__input">
           <TextInput
             Label={<></>}
-            Error={<FieldError path={path} message={error} showError={Boolean(error) || showError} />}
-            showError={Boolean(error) || showError}
+            Error={
+              <FieldError
+                path={path}
+                message={validationError}
+                showError={Boolean(validationError) || showError}
+              />
+            }
+            showError={Boolean(validationError) || showError}
             path={path}
             value={input}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => onInputChange(event.target.value)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              setInput(event.target.value)
+              // Don't parse or validate while the user is actively typing.
+              setValidationError(undefined)
+              setValidatedPhone(undefined)
+            }}
             placeholder="Enter phone number"
             description={fieldDescription}
-            htmlAttributes={{ autoComplete: 'tel' }}
+            htmlAttributes={{
+              autoComplete: 'tel',
+              onBlur: onInputBlur,
+            }}
           />
         </div>
       </div>
-      {showFormattedPreviews && isValid && parsed ? (
+      {showFormattedPreviews && validatedPhone ? (
         <div className="payload-phone-number__previews" aria-live="polite">
           <div>
             <span>International</span>
-            <strong>{parsed.formatInternational()}</strong>
+            <strong>{validatedPhone.formatInternational()}</strong>
           </div>
           <div>
             <span>National</span>
-            <strong>{parsed.formatNational()}</strong>
+            <strong>{validatedPhone.formatNational()}</strong>
           </div>
         </div>
       ) : null}
