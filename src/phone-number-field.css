@@ -118,3 +118,45 @@
     max-width: 100%;
   }
 }
+
+
+/* Search results need more room than the compact closed country control. */
+.payload-phone-number__country [class*='menu'] {
+  box-sizing: border-box;
+  width: max-content;
+  min-width: min(320px, calc(100vw - 32px));
+  max-width: min(380px, calc(100vw - 32px));
+  z-index: 20;
+}
+
+.payload-phone-number__country [class*='menu-list'] {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.payload-phone-number__country [class*='option'] {
+  box-sizing: border-box;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.payload-phone-number__country-option {
+  width: 100%;
+}
+
+.payload-phone-number__country-option > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payload-phone-number__error {
+  margin-top: 6px;
+  min-width: 0;
+}
+
+.payload-phone-number__error .field-error {
+  margin: 0;
+}
