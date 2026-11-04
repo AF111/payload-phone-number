@@ -2,7 +2,7 @@
 
 A phone-number field for **Payload CMS v4**, powered by Google's full phone-number metadata through [libphonenumber-js](https://github.com/catamphetamine/libphonenumber-js).
 
-It uses Payload's own admin UI components for the label, description, and text input, with a searchable country selector, country flags from [FlagCDN](https://flagcdn.com/), and formatted previews that adapt to Payload's theme variables.
+It uses Payload's own admin UI components for the label, description, and text input, with a searchable country selector, country flags from [FlagCDN](https://flagcdn/), and a national-format display that is normalized on blur.
 
 ## Install from GitHub
 
@@ -39,7 +39,6 @@ export const Contacts: CollectionConfig = {
       label: 'Phone number',
       defaultCountry: 'SE',
       required: true,
-      showFormattedPreviews: true,
     }),
   ],
 }
@@ -71,10 +70,7 @@ The field is a Payload group. It stores the canonical number and useful country/
 | `countryName` | English country/region name, e.g. `Sweden`. Null for non-geographic numbers. |
 | `numberType` | libphonenumber classification such as `MOBILE`, `FIXED_LINE`, or `VOIP`; null when unavailable. |
 
-The admin UI displays libphonenumber's human-readable formats, for example:
-
-- International: `+46 70 123 45 67`
-- National: `070-123 45 67`
+The admin input displays libphonenumber's human-readable national format, including when an existing record is loaded. The input is formatted only after validation, and the normalized stored value remains digits-only.
 
 Display formatting is separate from the normalized stored values. `intlFormat` remains E.164, while `nationalFormat` is digits only.
 
@@ -83,7 +79,6 @@ Display formatting is separate from the normalized stored values. `intlFormat` r
 | Option | Default | Description |
 | --- | --- | --- |
 | `defaultCountry` | `'US'` | ISO 3166-1 alpha-2 country used to interpret national input |
-| `showFormattedPreviews` | `true` | Show international and national display formats |
 | `required` | `false` | Require a valid phone number |
 | `label` | `'Phone number'` | Admin field label |
 | `description` | — | Help text below the field |
@@ -92,7 +87,8 @@ Display formatting is separate from the normalized stored values. `intlFormat` r
 
 - Numbers beginning with `+` or the international access prefix `00` are detected as international numbers, regardless of the currently selected country.
 - When the input loses focus, an international number that identifies a country updates the country selector and replaces the dialing-code-prefixed input with its national format.
-- Parsing and validation are deferred until the input loses focus, rather than running on every keystroke.
+- Parsing and validation are deferred until the user changes the input and then moves focus away; simply focusing and blurring an untouched field does not update Payload's form state.
+- Valid saved numbers are formatted for display on initial load and after blur, while stored `nationalFormat` remains digits only.
 - National-format input is interpreted using the selected country.
 - Invalid or incomplete input is not stored as a normalized number. Empty optional groups are accepted; partially populated groups are rejected.
 - Server-side validation checks that the stored number, calling code, country, country name, and number type are consistent.
