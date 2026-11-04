@@ -1,3 +1,4 @@
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import type { Field } from 'payload'
 
 export type PhoneNumberFieldOptions = {
@@ -11,6 +12,11 @@ export type PhoneNumberFieldOptions = {
   label?: string
   /** Help text shown below the field. */
   description?: string
+}
+
+export type PhoneNumberValue = {
+  e164: string
+  national: string
 }
 
 /**
@@ -50,13 +56,22 @@ export const phoneNumberField = (
       { name: 'national', type: 'text', admin: { hidden: true } },
     ],
     validate: (value) => {
-      if (required && (!value || typeof value !== 'object' || !('e164' in value) || !value.e164)) {
-        return 'A valid phone number is required.'
+      const phoneValue = value as Partial<PhoneNumberValue> | null | undefined
+      if (!phoneValue?.e164 || !phoneValue?.national) {
+        return required ? 'A valid phone number is required.' : true
       }
+
+      const parsed = parsePhoneNumberFromString(phoneValue.e164)
+      if (
+        !parsed?.isValid() ||
+        parsed.number !== phoneValue.e164 ||
+        !/^\\d+$/.test(phoneValue.national) ||
+        phoneValue.national !== parsed.formatNational().replace(/\\D/g, '')
+      ) {
+        return 'Enter a valid phone number. The stored values must be normalized.'
+      }
+
       return true
     },
   }
 }
-
-export { PhoneNumberField } from './PhoneNumberField.js'
-export type { PhoneNumberFieldProps } from './PhoneNumberField.js'
