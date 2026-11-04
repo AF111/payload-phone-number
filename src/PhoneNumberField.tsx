@@ -68,15 +68,15 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
   // A Payload group is made up of child field paths. Update each nested path
   // so Payload serializes the group with its complete normalized value.
   const { value: intlFormatValue, setValue: setIntlFormatValue, showError } = useField<string | null>({
-    path: \`\${path}.intlFormat\`,
+    path: `${path}.intlFormat`,
   })
   const { value: nationalFormatValue, setValue: setNationalFormatValue } = useField<string | null>({
-    path: \`\${path}.nationalFormat\`,
+    path: `${path}.nationalFormat`,
   })
-  const { setValue: setDialingCode } = useField<string | null>({ path: \`\${path}.dialingCode\` })
-  const { setValue: setCountryValue } = useField<string | null>({ path: \`\${path}.country\` })
-  const { setValue: setCountryName } = useField<string | null>({ path: \`\${path}.countryName\` })
-  const { setValue: setNumberType } = useField<string | null>({ path: \`\${path}.numberType\` })
+  const { setValue: setDialingCode } = useField<string | null>({ path: `${path}.dialingCode` })
+  const { setValue: setCountryValue } = useField<string | null>({ path: `${path}.country` })
+  const { setValue: setCountryName } = useField<string | null>({ path: `${path}.countryName` })
+  const { setValue: setNumberType } = useField<string | null>({ path: `${path}.numberType` })
 
   const initialCountry = getCountry(intlFormatValue ?? undefined, defaultCountry)
   const [country, setCountry] = useState<CountryCode>(initialCountry)
@@ -125,7 +125,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
       const phoneCountry = phone.country ?? null
       setIntlFormatValue(phone.number)
       setNationalFormatValue(national)
-      setDialingCode(\`+\${phone.countryCallingCode}\`)
+      setDialingCode(`+${phone.countryCallingCode}`)
       setCountryValue(phoneCountry)
       setCountryName(phoneCountry ? countryNames.of(phoneCountry) ?? null : null)
       setNumberType(phone.getType() ?? null)
@@ -173,8 +173,8 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             formatOptionLabel={(option) => (
               <span className="payload-phone-number__country-option">
                 <img
-                  src={\`https://flagcdn.com/w20/\${String(option.value).toLowerCase()}.png\`}
-                  srcSet={\`https://flagcdn.com/w40/\${String(option.value).toLowerCase()}.png 2x\`}
+                  src={`https://flagcdn.com/w20/${String(option.value).toLowerCase()}.png`}
+                  srcSet={`https://flagcdn.com/w40/${String(option.value).toLowerCase()}.png 2x`}
                   width="20"
                   height="15"
                   loading="lazy"
