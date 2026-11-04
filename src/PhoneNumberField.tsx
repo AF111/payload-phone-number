@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo, useState } from 'react'
-import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, type CountryCode } from 'libphonenumber-js'
+import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, type CountryCode } from 'libphonenumber-js/max'
 import { FieldError, FieldLabel, TextInput, useField } from '@payloadcms/ui'
 import type { GroupFieldClientProps } from 'payload'
 import './phone-number-field.css'
