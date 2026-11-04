@@ -95,3 +95,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+.payload-phone-number__description {
+  margin: 0;
+  color: var(--theme-elevation-600);
+  font-size: 12px;
+  line-height: 1.45;
+}
