@@ -1,14 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   parsePhoneNumberFromString,
   getCountries,
   getCountryCallingCode,
   type CountryCode,
-  type PhoneNumber,
 } from 'libphonenumber-js/max'
-import { FieldError, FieldLabel, ReactSelect, TextInput, useField } from '@payloadcms/ui'
+import { FieldError, FieldLabel, ReactSelect, useField } from '@payloadcms/ui'
 import type { GroupFieldClientProps } from 'payload'
 import './phone-number-field.css'
 
@@ -39,7 +38,6 @@ function parseInput(value: string, country: CountryCode) {
   const trimmed = value.trim()
   if (!trimmed) return undefined
 
-  // Accept the common international access prefix as well as an explicit plus.
   const international = trimmed.startsWith('+') || trimmed.startsWith('00')
   const normalized = trimmed.startsWith('00') ? '+' + trimmed.slice(2) : trimmed
 
@@ -54,19 +52,35 @@ function getCountry(value: string | undefined, fallback: string): CountryCode {
   return (countries.some(({ code }) => code === preferred) ? preferred : 'US') as CountryCode
 }
 
+function getInitialDisplayValue(
+  intlFormat: string | null | undefined,
+  nationalFormat: string | null | undefined,
+  country: CountryCode,
+): string {
+  if (intlFormat) {
+    const parsed = parsePhoneNumberFromString(intlFormat)
+    if (parsed?.isValid()) return parsed.formatNational()
+  }
+
+  if (nationalFormat) {
+    const parsed = parseInput(nationalFormat, country)
+    if (parsed?.isValid()) return parsed.formatNational()
+    return nationalFormat
+  }
+
+  return intlFormat ?? ''
+}
+
 export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberFieldProps> = (rawProps) => {
   const {
     path,
     defaultCountry = 'US',
-    showFormattedPreviews = true,
     required = false,
     label,
     description,
     field,
   } = rawProps as GroupFieldClientProps & PhoneNumberFieldProps
 
-  // A Payload group is made up of child field paths. Update each nested path
-  // so Payload serializes the group with its complete normalized value.
   const { value: intlFormatValue, setValue: setIntlFormatValue, showError } = useField<string | null>({
     path: `${path}.intlFormat`,
   })
@@ -80,13 +94,11 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
 
   const initialCountry = getCountry(intlFormatValue ?? undefined, defaultCountry)
   const [country, setCountry] = useState<CountryCode>(initialCountry)
-  const [input, setInput] = useState<string>(() => {
-    if (nationalFormatValue) return nationalFormatValue
-    if (!intlFormatValue) return ''
-    return parsePhoneNumberFromString(intlFormatValue)?.formatNational() ?? intlFormatValue
-  })
+  const [input, setInput] = useState<string>(() =>
+    getInitialDisplayValue(intlFormatValue, nationalFormatValue, initialCountry),
+  )
   const [validationError, setValidationError] = useState<string | undefined>()
-  const [validatedPhone, setValidatedPhone] = useState<PhoneNumber | undefined>()
+  const editedSinceFocus = useRef(false)
 
   const validateAndStore = (rawInput: string, selectedCountry: CountryCode) => {
     const trimmed = rawInput.trim()
@@ -98,7 +110,6 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
       setCountryValue(null)
       setCountryName(null)
       setNumberType(null)
-      setValidatedPhone(undefined)
       setValidationError(required ? 'A valid phone number is required.' : undefined)
       return
     }
@@ -115,9 +126,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
       canSelectDetectedCountry &&
       !phone.ext
     ) {
-      // Country detection and dial-code removal happen only after blur.
       setCountry(detectedCountry as CountryCode)
-      setInput(phone.formatNational())
     }
 
     if (phone?.isValid() && !phone.ext) {
@@ -129,24 +138,18 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
       setCountryValue(phoneCountry)
       setCountryName(phoneCountry ? countryNames.of(phoneCountry) ?? null : null)
       setNumberType(phone.getType() ?? null)
-      setValidatedPhone(phone)
+      setInput(phone.formatNational())
       setValidationError(undefined)
       return
     }
 
-    // Keep invalid input visible and let server validation reject partial data.
     setIntlFormatValue(trimmed)
     setNationalFormatValue('')
     setDialingCode('')
     setCountryValue(null)
     setCountryName(null)
     setNumberType(null)
-    setValidatedPhone(undefined)
     setValidationError('Enter a valid phone number for the selected country.')
-  }
-
-  const onInputBlur = () => {
-    validateAndStore(input, country)
   }
 
   const onCountryChange = (nextCountry: string) => {
@@ -165,6 +168,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
         <div className="payload-phone-number__country">
           <ReactSelect
             aria-label="Country"
+            classNamePrefix="rs"
             options={countryOptions}
             value={countryOptions.find((option) => option.value === country)}
             onChange={(option) => {
@@ -187,50 +191,36 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
             placeholder="Country"
           />
         </div>
-        <div
-          className="payload-phone-number__input"
-          onBlur={(event: React.FocusEvent<HTMLDivElement>) => {
-            if (event.target instanceof HTMLInputElement) onInputBlur()
-          }}
-        >
-          <TextInput
-            Label={<></>}
-            Error={
-              <FieldError
-                path={path}
-                message={validationError}
-                showError={Boolean(validationError) || showError}
-              />
-            }
-            showError={Boolean(validationError) || showError}
-            path={path}
+        <div className="payload-phone-number__input">
+          <input
+            id={`${path}-input`}
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             value={input}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setInput(event.target.value)
-              // Don't parse or validate while the user is actively typing.
-              setValidationError(undefined)
-              setValidatedPhone(undefined)
-            }}
             placeholder="Enter phone number"
-            description={fieldDescription}
-            htmlAttributes={{
-              autoComplete: 'tel',
+            aria-invalid={Boolean(validationError) || showError}
+            onFocus={() => {
+              editedSinceFocus.current = false
+            }}
+            onChange={(event) => {
+              editedSinceFocus.current = true
+              setInput(event.target.value)
+              setValidationError(undefined)
+            }}
+            onBlur={() => {
+              if (editedSinceFocus.current) validateAndStore(input, country)
+              editedSinceFocus.current = false
             }}
           />
         </div>
       </div>
-      {showFormattedPreviews && validatedPhone ? (
-        <div className="payload-phone-number__previews" aria-live="polite">
-          <div>
-            <span>International</span>
-            <strong>{validatedPhone.formatInternational()}</strong>
-          </div>
-          <div>
-            <span>National</span>
-            <strong>{validatedPhone.formatNational()}</strong>
-          </div>
-        </div>
-      ) : null}
+      {fieldDescription ? <div className="payload-phone-number__description">{fieldDescription}</div> : null}
+      <FieldError
+        path={path}
+        message={validationError}
+        showError={Boolean(validationError) || showError}
+      />
     </div>
   )
 }
