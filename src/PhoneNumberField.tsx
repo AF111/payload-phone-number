@@ -96,15 +96,26 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     const phone = parseInput(nextValue, country)
     const isInternational = /^\s*(?:\+|00)/.test(nextValue)
 
-    if (isInternational && phone?.isValid() && !phone.ext && phone.country) {
-      // Detect the country from the international number, update the selector,
-      // and replace the dial-code-prefixed value with the national format.
+    if (
+      isInternational &&
+      phone?.country &&
+      !phone.ext &&
+      countries.some(({ code }) => code === phone.country)
+    ) {
+      // Detect as soon as libphonenumber can identify the country, even while
+      // the user is still typing an incomplete number. Remove the calling code
+      // from the input and keep the country selection in sync.
       setCountry(phone.country)
       setInput(phone.formatNational())
-      setValue({
-        e164: phone.number,
-        national: digits(phone.formatNational()),
-      })
+
+      if (phone.isValid()) {
+        setValue({
+          e164: phone.number,
+          national: digits(phone.formatNational()),
+        })
+      } else {
+        setValue({ e164: phone.number, national: '' })
+      }
       return
     }
 
