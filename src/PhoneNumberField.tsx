@@ -125,6 +125,9 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
         </div>
         <div className="payload-phone-number__input">
           <TextInput
+            Label={<></>}
+            Error={<FieldError path={path} message={error} showError={Boolean(error) || showError} />}
+            showError={Boolean(error) || showError}
             path={path}
             value={input}
             onChange={(event) => onInputChange(event.target.value)}
@@ -134,7 +137,6 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
           />
         </div>
       </div>
-      <FieldError path={path} message={error} showError={Boolean(error) || showError} />
       {showFormattedPreviews && isValid && parsed ? (
         <div className="payload-phone-number__previews" aria-live="polite">
           <div>
