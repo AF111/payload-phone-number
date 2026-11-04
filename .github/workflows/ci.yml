@@ -27,10 +27,14 @@ jobs:
           node-version: 24.22.1
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
 
+      # Keep typecheck separate from install/prepare so failures are visible and actionable.
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Build
         run: pnpm build
+
+      - name: Tests
+        run: pnpm test
