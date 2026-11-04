@@ -3,18 +3,19 @@
 import React, { useMemo, useState } from 'react'
 import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, type CountryCode } from 'libphonenumber-js'
 import { FieldDescription, FieldLabel, TextInput, useField } from '@payloadcms/ui'
-import type { TextFieldClientComponent } from 'payload'
+import type { GroupFieldClientComponent, GroupFieldClientProps } from 'payload'
 import './phone-number-field.css'
 
 export type PhoneNumberFieldProps = {
   path: string
-  field?: { label?: string; required?: boolean; admin?: { description?: string } }
   defaultCountry?: string
   showFormattedPreviews?: boolean
   required?: boolean
   label?: string
   description?: string
 }
+
+type PhoneNumberValue = { e164?: string; national?: string } | null
 
 const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
 const countries = getCountries()
@@ -25,7 +26,7 @@ function digits(value: string): string {
   return value.replace(/\D/g, '')
 }
 
-export const PhoneNumberField: TextFieldClientComponent = (props) => {
+export const PhoneNumberField: GroupFieldClientComponent = (rawProps) => {
   const {
     path,
     defaultCountry = 'US',
@@ -34,13 +35,15 @@ export const PhoneNumberField: TextFieldClientComponent = (props) => {
     label,
     description,
     field,
-  } = props as PhoneNumberFieldProps
+  } = rawProps as GroupFieldClientProps & PhoneNumberFieldProps
 
-  const { value: e164Value, setValue: setE164 } = useField<string>({ path: `${path}.e164` })
-  const { value: nationalValue, setValue: setNational } = useField<string>({ path: `${path}.national` })
-  const initialCountry = (countries.some(({ code }) => code === defaultCountry.toUpperCase())
-    ? defaultCountry.toUpperCase()
-    : 'US') as CountryCode
+  const { value: storedValue, setValue } = useField<PhoneNumberValue>({ path })
+  const e164Value = storedValue?.e164
+  const initialCountry = (
+    countries.some(({ code }) => code === defaultCountry.toUpperCase())
+      ? defaultCountry.toUpperCase()
+      : 'US'
+  ) as CountryCode
   const [country, setCountry] = useState<CountryCode>(initialCountry)
   const [input, setInput] = useState<string>(() => {
     if (!e164Value) return ''
@@ -69,11 +72,9 @@ export const PhoneNumberField: TextFieldClientComponent = (props) => {
       : parsePhoneNumberFromString(nextValue, country)
 
     if (phone?.isValid() && !phone.ext) {
-      setE164(phone.number)
-      setNational(digits(phone.formatNational()))
+      setValue({ e164: phone.number, national: digits(phone.formatNational()) })
     } else {
-      setE164(null)
-      setNational(null)
+      setValue(null)
     }
   }
 
@@ -83,11 +84,9 @@ export const PhoneNumberField: TextFieldClientComponent = (props) => {
     if (input && !input.trim().startsWith('+')) {
       const phone = parsePhoneNumberFromString(input, next)
       if (phone?.isValid() && !phone.ext) {
-        setE164(phone.number)
-        setNational(digits(phone.formatNational()))
+        setValue({ e164: phone.number, national: digits(phone.formatNational()) })
       } else {
-        setE164(null)
-        setNational(null)
+        setValue(null)
       }
     }
   }
@@ -97,7 +96,7 @@ export const PhoneNumberField: TextFieldClientComponent = (props) => {
 
   return (
     <div className="payload-phone-number">
-      <FieldLabel htmlFor={path} label={fieldLabel} required={required || field?.required} />
+      <FieldLabel path={path} label={fieldLabel} required={required || field?.required} />
       <div className="payload-phone-number__controls">
         <label className="payload-phone-number__country">
           <span className="payload-phone-number__sr-only">Country</span>
@@ -117,9 +116,7 @@ export const PhoneNumberField: TextFieldClientComponent = (props) => {
           <TextInput
             path={path}
             value={input}
-            onChange={(event: React.ChangeEvent<HTMLInputElement> | string) =>
-              onInputChange(event.target.value)
-            }
+            onChange={(event) => onInputChange(event.target.value)}
             onBlur={() => setTouched(true)}
             placeholder="Enter phone number"
             inputMode="tel"
@@ -142,8 +139,6 @@ export const PhoneNumberField: TextFieldClientComponent = (props) => {
           </div>
         </div>
       ) : null}
-      <input type="hidden" name={`${path}.e164`} value={e164Value ?? ''} />
-      <input type="hidden" name={`${path}.national`} value={nationalValue ?? ''} />
     </div>
   )
 }
