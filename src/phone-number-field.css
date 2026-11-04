@@ -13,8 +13,16 @@
 }
 
 .payload-phone-number__country {
-  flex: 0 0 min(42%, 240px);
-  min-width: 150px;
+  flex: 0 1 auto;
+  width: fit-content;
+  min-width: 112px;
+  max-width: min(230px, 48%);
+}
+
+.payload-phone-number__country .rs__control,
+.payload-phone-number__country [class*="control"] {
+  min-width: 0;
+  width: 100%;
 }
 
 .payload-phone-number__country > div {
