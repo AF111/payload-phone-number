@@ -65,7 +65,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
       : parsePhoneNumberFromString(input, country)
   }, [input, country])
 
-  const isValid = Boolean(parsed?.isValid())
+  const isValid = Boolean(parsed?.isValid() && !parsed.ext)
   const hasInput = input.trim().length > 0
   const error = hasInput && touched && !isValid
     ? 'Enter a valid phone number for the selected country.'
