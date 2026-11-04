@@ -96,6 +96,8 @@ export const phoneNumberField = (
       if (
         !hasIntlFormat ||
         !hasNationalFormat ||
+        typeof phoneValue?.intlFormat !== 'string' ||
+        typeof phoneValue?.nationalFormat !== 'string' ||
         !phoneValue?.dialingCode ||
         phoneValue.country === undefined ||
         phoneValue.countryName === undefined ||
