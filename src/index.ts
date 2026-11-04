@@ -1,4 +1,4 @@
-import { parsePhoneNumberFromString } from 'libphonenumber-js'
+import { parsePhoneNumberFromString } from 'libphonenumber-js/max'
 import type { Field } from 'payload'
 
 export type PhoneNumberFieldOptions = {
