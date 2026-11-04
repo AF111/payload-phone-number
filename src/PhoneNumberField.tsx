@@ -69,6 +69,11 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
 
   const onInputChange = (nextValue: string) => {
     setInput(nextValue)
+    if (!nextValue.trim()) {
+      setValue(null)
+      return
+    }
+
     const phone = nextValue.trim().startsWith('+')
       ? parsePhoneNumberFromString(nextValue)
       : parsePhoneNumberFromString(nextValue, country)
@@ -76,7 +81,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     if (phone?.isValid() && !phone.ext) {
       setValue({ e164: phone.number, national: digits(phone.formatNational()) })
     } else {
-      setValue(null)
+      setValue({ e164: nextValue.trim(), national: '' })
     }
   }
 
@@ -88,7 +93,7 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
       if (phone?.isValid() && !phone.ext) {
         setValue({ e164: phone.number, national: digits(phone.formatNational()) })
       } else {
-        setValue(null)
+        setValue({ e164: input.trim(), national: '' })
       }
     }
   }
