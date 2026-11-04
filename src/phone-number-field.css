@@ -8,52 +8,61 @@
 
 .payload-phone-number__controls {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .payload-phone-number__country {
-  flex: 0 1 auto;
-  width: fit-content;
-  min-width: 112px;
-  max-width: min(230px, 48%);
+  flex: 0 1 40%;
+  width: 40%;
+  min-width: 200px;
+  max-width: 320px;
+  min-width: min(200px, 42%);
 }
 
-/* Payload's ReactSelect adapter supplies its own class prefix. Keep the
-   selector resilient to its generated class names across Payload versions. */
 .payload-phone-number__country > div {
   width: 100%;
+  min-width: 0;
 }
 
-.payload-phone-number__country [class*='control'] {
+/* Keep the select and telephone input on the same baseline and height. */
+.payload-phone-number__country .rs__control {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  min-width: 0;
-  min-height: var(--base, 40px);
+  min-height: 48px;
+  height: 48px;
   width: 100%;
 }
 
-.payload-phone-number__country [class*='value-container'] {
+.payload-phone-number__country .rs__value-container {
   display: flex;
   align-items: center;
   min-width: 0;
+  flex-wrap: nowrap;
 }
 
-.payload-phone-number__country [class*='single-value'] {
-  display: flex;
-  align-items: center;
-  max-width: calc(100% - 4px);
+.payload-phone-number__country .rs__single-value {
+  display: block;
+  position: relative;
+  inset: auto;
+  max-width: 100%;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transform: none;
 }
 
 .payload-phone-number__country-option {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   min-width: 0;
-  line-height: 1.25;
+  line-height: 1.35;
 }
 
 .payload-phone-number__country-option img {
@@ -66,13 +75,13 @@
 }
 
 .payload-phone-number__country-option > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .payload-phone-number__input {
-  flex: 1 1 auto;
+  flex: 1 1 60%;
   min-width: 0;
 }
 
@@ -80,11 +89,11 @@
   box-sizing: border-box;
   display: block;
   width: 100%;
-  min-height: var(--base, 40px);
+  height: 48px;
+  min-height: 48px;
   padding: 0 12px;
   color: var(--theme-text, inherit);
   background: var(--theme-input-bg, var(--theme-elevation-0, transparent));
-  /* Keep a visible field boundary in both Payload light and dark themes. */
   border: 1px solid var(--theme-elevation-400, #777);
   border-radius: var(--style-radius-s, 4px);
   font: inherit;
@@ -101,62 +110,61 @@
   border-color: var(--theme-error-500, #d63638);
 }
 
+.payload-phone-number__error {
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+  padding-left: 0;
+}
+
+.payload-phone-number__error .field-error {
+  margin: 0;
+}
+
 .payload-phone-number__description {
   color: var(--theme-elevation-600);
   font-size: 13px;
+}
+
+/* The menu is wider than the compact closed selector so country names remain readable. */
+.payload-phone-number__country .rs__menu {
+  box-sizing: border-box;
+  width: 360px;
+  min-width: min(320px, calc(100vw - 32px));
+  max-width: min(380px, calc(100vw - 32px));
+  z-index: 100;
+}
+
+.payload-phone-number__country .rs__menu-list {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.payload-phone-number__country .rs__option {
+  box-sizing: border-box;
+  white-space: normal;
+}
+
+.payload-phone-number__country .rs__option .payload-phone-number__country-option > span {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 600px) {
   .payload-phone-number__controls {
     flex-direction: column;
     align-items: stretch;
+    gap: 8px;
   }
 
   .payload-phone-number__country {
-    flex-basis: auto;
-    width: min(100%, 230px);
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
     max-width: 100%;
   }
-}
 
-
-/* Search results need more room than the compact closed country control. */
-.payload-phone-number__country [class*='menu'] {
-  box-sizing: border-box;
-  width: max-content;
-  min-width: min(320px, calc(100vw - 32px));
-  max-width: min(380px, calc(100vw - 32px));
-  z-index: 20;
-}
-
-.payload-phone-number__country [class*='menu-list'] {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.payload-phone-number__country [class*='option'] {
-  box-sizing: border-box;
-  min-width: 0;
-  white-space: nowrap;
-}
-
-.payload-phone-number__country-option {
-  width: 100%;
-}
-
-.payload-phone-number__country-option > span {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.payload-phone-number__error {
-  margin-top: 6px;
-  min-width: 0;
-}
-
-.payload-phone-number__error .field-error {
-  margin: 0;
+  .payload-phone-number__country .rs__menu {
+    width: min(360px, calc(100vw - 32px));
+  }
 }
