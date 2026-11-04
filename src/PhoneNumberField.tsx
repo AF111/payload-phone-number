@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import { parsePhoneNumberFromString, getCountries, getCountryCallingCode, type CountryCode } from 'libphonenumber-js/max'
-import { FieldError, FieldLabel, TextInput, useField } from '@payloadcms/ui'
+import { FieldError, FieldLabel, ReactSelect, TextInput, useField } from '@payloadcms/ui'
 import type { GroupFieldClientProps } from 'payload'
 import './phone-number-field.css'
 
@@ -21,6 +21,10 @@ const countryNames = new Intl.DisplayNames(['en'], { type: 'region' })
 const countries = getCountries()
   .map((code) => ({ code, name: countryNames.of(code) ?? code }))
   .sort((a, b) => a.name.localeCompare(b.name))
+const countryOptions = countries.map(({ code, name }) => ({
+  label: name + ' (+' + getCountryCallingCode(code) + ')',
+  value: code,
+}))
 
 function digits(value: string): string {
   return value.replace(/\D/g, '')
@@ -105,20 +109,18 @@ export const PhoneNumberField: React.FC<GroupFieldClientProps & PhoneNumberField
     <div className="payload-phone-number">
       <FieldLabel path={path} label={fieldLabel} required={required || field?.required} />
       <div className="payload-phone-number__controls">
-        <label className="payload-phone-number__country">
-          <span className="payload-phone-number__sr-only">Country</span>
-          <select
+        <div className="payload-phone-number__country">
+          <ReactSelect
             aria-label="Country"
-            value={country}
-            onChange={(event) => onCountryChange(event.target.value)}
-          >
-            {countries.map(({ code, name }) => (
-              <option key={code} value={code}>
-                {name} (+{getCountryCallingCode(code)})
-              </option>
-            ))}
-          </select>
-        </label>
+            options={countryOptions}
+            value={countryOptions.find((option) => option.value === country)}
+            onChange={(option) => {
+              if (option && !Array.isArray(option)) onCountryChange(option.value)
+            }}
+            isClearable={false}
+            placeholder="Country"
+          />
+        </div>
         <div className="payload-phone-number__input">
           <TextInput
             path={path}
